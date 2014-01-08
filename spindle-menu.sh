@@ -7,11 +7,13 @@
 clear 
 
 alias rm='rm -I'
-SPINDLE_PATH="$HOME/bin/spindle"
+export SPINDLE_PATH="$HOME/bin/spindle"
 
 if [ -d "$SPINDLE_PATH" ] ; then
-        export PATH=""$SPINDLE_PATH":$PATH"
-        cd "$SPINDLE_PATH"
+        export PATH="$SPINDLE_PATH:$PATH"
+	echo "export PATH="$PATH" >> "$SPINDLE_PATH"/my_spindle_chroot/etc/profile
+        echo "export PATH="$PATH" >> "$SPINDLE_PATH"/my_spindle_chroot/etc/bash.bashrc
+	cd "$SPINDLE_PATH"
 else
         echo "Have not found spindle at "$SPINDLE_PATH" \
         Install or link spindle and try again."
@@ -32,7 +34,7 @@ ShowMenu(){
     
     ## Show the menu in a loop
     while [ $CONTINUE != 'true' ] ; do
-
+	clear
     ## Show Menu Header
     echo
     echo '                    Spindle CLI Menu, by: Socialdefect'
@@ -69,7 +71,12 @@ ShowMenu(){
 	;;
 	11)
         echo
-        sudo rm -rfv my_spindle_chroot
+	echo && read -p 'Are you sure you want to delete the chroot dir and its contents??? [yes/no]: ' YESNO
+	if [ $YESNO = 'yes' ] ; then
+	        sudo rm -rfv my_spindle_chroot
+	else
+		echo 'OK... Leaving things as they are...' && sleep 2
+	fi
         ;;
         111)
         clear
@@ -78,49 +85,49 @@ ShowMenu(){
         schroot -c spindle
         ;;
         2)
-        downgrade_qemu
+        ./downgrade_qemu
         ;;
         22)
-        schroot -c spindle downgrade_qemu
+        schroot -c spindle sudo ./downgrade_qemu
         ;;
         3)
-        wheezy-stage0
+        ./wheezy-stage0
         ;;
         33)
-        schroot -c spindle wheezy-stage0
+        schroot -c spindle ./wheezy-stage0
         ;;
         4)
-        wheezy-stage1
+        ./wheezy-stage1
         ;;
         44)
-        schroot -c spindle wheezy-stage1
+        schroot -c spindle ./wheezy-stage1
         ;;
         5)
-        wheezy-stage2
+        ./wheezy-stage2
         ;;
         55)
-        schroot -c spindle wheezy-stage2
+        schroot -c spindle ./wheezy-stage2
         ;;
         6)
-        wheezy-stage3
+        ./wheezy-stage3
         ;;
         66)
-        schroot -c spindle wheezy-stage3
+        schroot -c spindle ./wheezy-stage3
         ;;
         7)
-        wheezy-stage4-lxde
+        ./wheezy-stage4-lxde
         FILENAME="stage4-lxde"
         ;;
         77)
-        schroot -c spindle wheezy-stage4-lxde
+        schroot -c spindle ./wheezy-stage4-lxde
         FILENAME="stage4-lxde"
         ;;
         8)
-        wheezy-stage4-lxde-edu
+        ./wheezy-stage4-lxde-edu
         FILENAME="stage4-lxde-edu"
         ;;
         88)
-        schroot -c spindle wheezy-stage4-lxde-edu
+        schroot -c spindle ./wheezy-stage4-lxde-edu
         FILENAME="stage4-lxde-edu"
         ;;
         9)
@@ -138,7 +145,10 @@ ShowMenu(){
 		  echo "Found $MY_STAGE4 executable"
 		  chmod +x "$MY_STAGE4"
 		  "$MY_STAGE4"
-		  TRUE="$?"
+			if [ $? != 0 ] ; then
+				./"$MY_STAGE4"
+				  TRUE="$?"
+			fi
 		  FILENAME=${MY_STAGE4##*/}
 		  if [ "$TRUE" != 0 ] ; then
 		      echo && echo 'The script returned an error. Please check what is wrong and try again.' && echo
@@ -171,11 +181,11 @@ ShowMenu(){
 			else
 				if [ -d "$SPINDLE_PATH"/my_spindle_chroot ] ; then
 					echo 'Making stage4 available in chroot'
-					cp "$MY_STAGE4" "$SPINDLE_PATH"/my_spindle_chroot/$HOME/bin/spindle/
+					cp -v "$MY_STAGE4" "$SPINDLE_PATH"/
 				fi
 			fi
 		  FILENAME=${MY_STAGE4##*/}
-		  schroot -c spindle "$FILENAME"
+		  schroot -c spindle ./"$FILENAME"
 		  TRUE="$?"
 		  if [ "$TRUE" != 0 ] ; then
 		      echo && echo 'The script returned an error. Please check what is wrong and try again.' && echo
