@@ -36,7 +36,12 @@ ShowMenu(){
     while [ $CONTINUE != 'true' ] ; do
 	clear
     ## Show Menu Header
-    echo
+    PREVCMD='0'
+    if [ "$PREVCMD" != 0 ] ; then
+	echo "Previous Action: $PREVCMD"
+    else
+	echo
+    fi
     echo '                    Spindle CLI Menu, by: Socialdefect'
     echo ''
     echo '    0) Read Spindle manual (press "q" to exit manual)
@@ -60,6 +65,8 @@ ShowMenu(){
      x) Exit Spindle Menu'
     echo ""
     read -p 'Make a selection: ' SelectTask
+
+	PREVCMD="$SelectTask"
 
     case "$SelectTask" in
 	0)
