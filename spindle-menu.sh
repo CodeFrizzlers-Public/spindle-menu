@@ -1,18 +1,19 @@
 #!/bin/bash
 
 ## Simple exec script for spindle
-## Needs spindle folder to be installed (or linked) at ~/bin/spindle
+## Needs spindle folder to be installed (or linked) at "$SPINDLE_PATH"
 ## If you link spindle don't link the build folder and other writable 
 ## folders you don't want to share
 clear 
 
 alias rm='rm -I'
+SPINDLE_PATH="$HOME/bin/spindle"
 
-if [ -d ~/bin/spindle ] ; then
-        export PATH="~/bin/spindle:$PATH"
-        cd ~/bin/spindle
+if [ -d "$SPINDLE_PATH" ] ; then
+        export PATH=""$SPINDLE_PATH":$PATH"
+        cd "$SPINDLE_PATH"
 else
-        echo "Have not found spindle at ~/bin/spindle \
+        echo "Have not found spindle at "$SPINDLE_PATH" \
         Install or link spindle and try again."
         exit 1
 fi
@@ -60,11 +61,13 @@ ShowMenu(){
 
     case "$SelectTask" in
 	0)
-	less ~/bin/spindle/README.mkd
+	less "$SPINDLE_PATH"/README.mkd
 	;;
         1)
-        sudo setup_spindle_environment my_spindle_chroot
+        sudo ./setup_spindle_environment my_spindle_chroot
         sudo modprobe nbd max_part=16
+	;;
+	11)
         echo
         sudo rm -rfv my_spindle_chroot
         ;;
@@ -128,7 +131,7 @@ ShowMenu(){
 	    you like to install on top of the base system. \
 	    You can copy the included stage4 scripts as templates. \
 	     \
-	    If your custom stage4 is stored in ~/bin/spindle/my_stage4 you can enter my_stage4 here. \
+	    If your custom stage4 is stored in "$SPINDLE_PATH"/my_stage4 you can enter my_stage4 here. \
 	    If you have stored the script somewhere else please enter the full path." && echo
 	    read -p 'Enter Stage4 Script: ' MY_STAGE4
 	    if [ -f "$MY_STAGE4" ] ; then
@@ -157,16 +160,23 @@ ShowMenu(){
 	    you like to install on top of the base system. \
 	    You can copy the included stage4 scripts as templates. \
 	     \
-	    If your custom stage4 is stored in ~/bin/spindle/my_stage4 you can enter my_stage4 here. \
+	    If your custom stage4 is stored in "$SPINDLE_PATH"/my_stage4 you can enter my_stage4 here. \
 	    If you have stored the script somewhere else please enter the full path." && echo
 	    read -p 'Enter Stage4 Script: ' MY_STAGE4
 	    if [ -f "$MY_STAGE4" ] ; then
 		  echo "Found $MY_STAGE4 executable"
 		  chmod +x "$MY_STAGE4"
-		  sudo cp "$MY_STAGE4" my_spindle_chroot/
-		  schroot -c spindle /"$MY_STAGE4"
-		  TRUE="$?"
+			if [ "$MY_STAGE4" = ${MY_STAGE4##*/} ] ; then
+				echo 'Stage4 is available in chroot'
+			else
+				if [ -d "$SPINDLE_PATH"/my_spindle_chroot ] ; then
+					echo 'Making stage4 available in chroot'
+					cp "$MY_STAGE4" "$SPINDLE_PATH"/my_spindle_chroot/$HOME/bin/spindle/
+				fi
+			fi
 		  FILENAME=${MY_STAGE4##*/}
+		  schroot -c spindle "$FILENAME"
+		  TRUE="$?"
 		  if [ "$TRUE" != 0 ] ; then
 		      echo && echo 'The script returned an error. Please check what is wrong and try again.' && echo
 		      waitforit
