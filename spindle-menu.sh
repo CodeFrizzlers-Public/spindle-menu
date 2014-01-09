@@ -11,8 +11,8 @@ export SPINDLE_PATH="$HOME/bin/spindle"
 
 if [ -d "$SPINDLE_PATH" ] ; then
         export PATH="$SPINDLE_PATH:$PATH"
-	echo "export PATH="$PATH" >> "$SPINDLE_PATH"/my_spindle_chroot/etc/profile
-        echo "export PATH="$PATH" >> "$SPINDLE_PATH"/my_spindle_chroot/etc/bash.bashrc
+	#echo "export PATH="$PATH" >> "$SPINDLE_PATH"/my_spindle_chroot/etc/profile
+        #echo "export PATH="$PATH" >> "$SPINDLE_PATH"/my_spindle_chroot/etc/bash.bashrc
 	cd "$SPINDLE_PATH"
 else
         echo "Have not found spindle at "$SPINDLE_PATH" \
@@ -36,12 +36,8 @@ ShowMenu(){
     while [ $CONTINUE != 'true' ] ; do
 	clear
     ## Show Menu Header
-    PREVCMD='0'
-    if [ "$PREVCMD" != 0 ] ; then
-	echo "Previous Action: $PREVCMD"
-    else
-	echo
-    fi
+    echo "Stage selected for build: $FILENAME"
+    echo
     echo '                    Spindle CLI Menu, by: Socialdefect'
     echo ''
     echo '    0) Read Spindle manual (press "q" to exit manual)
@@ -61,6 +57,8 @@ ShowMenu(){
      b) Build bootable stage3 image
      c) Build bootable stage4 image in chroot
      d) Build bootable stage3 image in chroot
+           ------------
+     f) Set Filename for the stage4 build
            ------------
      x) Exit Spindle Menu'
     echo ""
@@ -207,6 +205,8 @@ ShowMenu(){
 	done
         ;;
         a)
+	schroot -c spindle helper export_image_for_release out/"$FILENAME".qed "$FILENAME".img
+	
         if [ -f out/"$FILENAME" ] ; then
 	    helper export_image_for_release out/"$FILENAME".qed "$FILENAME".img
 	else
@@ -221,8 +221,9 @@ ShowMenu(){
 	fi
         ;;
         c)
-        schroot -c spindle helper export_image_for_release out/"$FILENAME".qed "$FILENAME".img
-        ;;
+        cd "$SPINDLE_PATH"/
+	schroot -c spindle helper export_image_for_release "$SPINDLE_PATH"/out/"$FILENAME".qed "$FILENAME".img
+	;;
         d)
         schroot -c spindle helper export_image_for_release out/"stage3".qed "stage3".img
         ;;
@@ -246,6 +247,10 @@ ShowMenu(){
 	echo
 	echo 'Enter filename '
         read -p 'Filename: ' FILENAME
+        ;;
+        f)
+        read -p 'Filename: ' FILENAME
+        echo "Filename set to: $FILENAME"
         ;;
         x)
             echo ""
